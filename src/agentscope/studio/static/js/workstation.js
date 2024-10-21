@@ -1356,38 +1356,16 @@ function filterEmptyValues(obj) {
 function reorganizeAndFilterConfigForAgentScope(inputData) {
     // Assuming there's only one tab ('Home'), but adjust if there are more
     const homeTab = inputData.drawflow.Home;
-    // Create a new object to hold the reorganized and filtered nodes
-    const filteredNodes = {};
 
     // Iterate through the nodes and copy them to the filteredNodes object
     Object.entries(homeTab.data).forEach(([key, node]) => {
-        // Skip the node if the name is 'welcome' or 'readme'
-        const nodeName = node.name.toLowerCase();
-//        if (nodeName === 'welcome' || nodeName === 'readme') {
-//            return;
-//        }
-
-        // Create a copy of the node without 'html', 'typenode', 'class', 'id', and 'name' fields
-        const {
-            html,
-            typenode,
-            pos_x,
-            pos_y,
-            class: classField,
-            id,
-            ...cleanNode
-        } = node;
-
-        if (cleanNode.data && cleanNode.data.args) {
-            cleanNode.data.args = filterEmptyValues(cleanNode.data.args);
+        if (node.data && node.data.args) {
+            node.data.args = filterEmptyValues(node.data.args);
         }
-
-        // Add the cleaned node to the filteredNodes object using its id as the key
-        filteredNodes[key] = cleanNode;
     });
 
     // Return the filtered and reorganized nodes instead of the original structure
-    return filteredNodes;
+    return inputData;
 }
 
 

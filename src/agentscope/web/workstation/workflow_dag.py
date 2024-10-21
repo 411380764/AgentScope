@@ -453,7 +453,7 @@ def build_dag(config: dict, only_compile: bool = True) -> ASDiGraph:
 
     # Add and init model nodes first
     for node_id, node_info in config.items():
-        if (
+        if (NODE_NAME_MAPPING.get(node_info["name"]) and
                 NODE_NAME_MAPPING[node_info["name"]].node_type
                 == WorkflowNodeType.MODEL
         ):
@@ -466,7 +466,7 @@ def build_dag(config: dict, only_compile: bool = True) -> ASDiGraph:
 
     # Add and init non-model nodes
     for node_id, node_info in config.items():
-        if (
+        if (NODE_NAME_MAPPING.get(node_info["name"]) and
                 NODE_NAME_MAPPING[node_info["name"]].node_type
                 != WorkflowNodeType.MODEL
         ):
