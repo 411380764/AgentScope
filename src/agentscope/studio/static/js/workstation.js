@@ -1893,7 +1893,7 @@ function showExportHTMLPopup() {
             '</code></pre>',
         showCloseButton: true,
         showCancelButton: true,
-        confirmButtonText: 'Copy',
+        confirmButtonText: 'Download',
         cancelButtonText: 'Close',
         willOpen: (element) => {
             // Find the code element inside the Swal content

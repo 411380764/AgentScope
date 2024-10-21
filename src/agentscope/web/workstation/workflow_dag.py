@@ -423,12 +423,9 @@ def sanitize_node_data(raw_info: dict) -> dict:
 def check_config_node(config: dict) -> dict:
     """
     """
-    new_config_data = {}
-    for node_id, node_info in config.items():
-        if node_info["name"] != "drawflow":
-            continue
-        new_config_data[node_id] = node_info
-    return new_config_data
+    if 'drawflow' in config:
+        config = config['drawflow']["Home"]["data"]
+    return config
 
 
 def build_dag(config: dict, only_compile: bool = True) -> ASDiGraph:
