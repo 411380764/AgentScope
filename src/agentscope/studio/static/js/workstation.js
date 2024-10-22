@@ -1882,10 +1882,9 @@ function showExportHTMLPopup() {
 
             // Copy to clipboard logic
             const content = codeElement.textContent;
-            const copyButton = Swal.getConfirmButton();
+            const downloadButton = Swal.getConfirmButton();
             copyButton.addEventListener('click', () => {
-//                copyToClipboard(content);
-                DownloadToClipboard(content);
+                DownloadToLocal(content);
             });
         }
     });
@@ -1926,7 +1925,7 @@ function showImportHTMLPopup(version) {
                 '<label for="fileInput" id="fileInputLabel">File upload</label>'+
                 '<input id="fileInput" type="file" class="swal2-file" style="display: none"></div>',
         showCancelButton: true,
-        confirmButtonText: 'upload',
+        confirmButtonText: 'Upload',
         cancelButtonText: 'Cancel',
         preConfirm: () => {
             const fileInput = document.getElementById('fileInput');
@@ -2227,11 +2226,6 @@ async function addHtmlAndReplacePlaceHolderBeforeImport(data) {
     for (const nodeId of Object.keys(data.drawflow.Home.data)) {
         const node = data.drawflow.Home.data[nodeId];
         if (!node.html) {
-//            if (node.name === "readme") {
-//                // Remove the node if its name is "readme"
-//                delete data.drawflow.Home.data[nodeId];
-//                continue; // Skip to the next iteration
-//            }
             console.log(node.name)
             const sourceCode = await fetchHtmlSourceCodeByName(node.name);
 
@@ -2278,8 +2272,8 @@ function copyToClipboard(contentToCopy) {
     document.body.removeChild(tempTextarea);
 }
 
-function DownloadToClipboard(contentToCopy) {
-    const fileContent = contentToCopy;
+function DownloadToLocal(content) {
+    const fileContent = content;
     // 创建一个Blob对象，将文件内容作为参数传入
     const blob = new Blob([fileContent], { type: "text/plain" });
     // 使用URL.createObjectURL()方法，将Blob对象转换为一个临时的URL
