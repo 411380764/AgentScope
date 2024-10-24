@@ -1938,16 +1938,14 @@ function showImportHTMLPopup(version) {
             const fileInput = modal.querySelector('#fileInput');
             const fileInputLabel = modal.querySelector('#fileInputLabel');
 
-            // 当文件选择发生变化时更新标签文本
             fileInput.addEventListener('change', (event) => {
               if (event.target.files.length > 0) {
-                fileInputLabel.textContent = event.target.files[0].name; // 显示文件名
+                fileInputLabel.textContent = event.target.files[0].name;
               } else {
-                fileInputLabel.textContent = '选择文件'; // 恢复默认文案
+                fileInputLabel.textContent = 'Select file';
               }
             });
 
-            // 如果有外部按钮，可以绑定点击事件
             const selectFileButton = document.getElementById('selectFileButton');
             if (selectFileButton) {
               selectFileButton.addEventListener('click', () => {
@@ -1956,9 +1954,8 @@ function showImportHTMLPopup(version) {
             }
          },
         willOpen: (modal) => {
-            // 确保文件输入框被正确初始化
             const fileInput = modal.querySelector('#fileInput');
-            fileInput.value = ''; // 清空之前的值
+            fileInput.value = '';
         }
     }).then((result) => {
 
@@ -2274,18 +2271,13 @@ function copyToClipboard(contentToCopy) {
 
 function DownloadToLocal(content) {
     const fileContent = content;
-    // 创建一个Blob对象，将文件内容作为参数传入
     const blob = new Blob([fileContent], { type: "text/plain" });
-    // 使用URL.createObjectURL()方法，将Blob对象转换为一个临时的URL
     const url = URL.createObjectURL(blob);
-    // 创建一个<a>标签，将其href属性设置为临时URL，并设置download属性为文件名
     const link = document.createElement("a");
     link.href = url;
     link.download = "example.json";
-    // 将<a>标签添加到页面中，触发点击事件，开始下载文件
     document.body.appendChild(link);
     link.click();
-    // 下载完成后，释放临时URL
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
