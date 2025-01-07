@@ -1061,7 +1061,7 @@ def init(
         _db.create_all()
 
     if debug:
-        _app.logger.setLevel("DEBU G")
+        _app.logger.setLevel("DEBUG")
     else:
         _app.logger.setLevel("INFO")
 
