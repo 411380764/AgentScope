@@ -40,7 +40,7 @@ from ..utils.common import (
     _generate_new_runtime_id,
 )
 from ..rpc.rpc_agent_client import RpcAgentClient
-
+from operator import itemgetter
 
 _app = Flask(__name__)
 
@@ -56,7 +56,7 @@ else:
 
 _db = SQLAlchemy(_app)
 
-_socketio = SocketIO(_app)
+_socketio = SocketIO(_app, cors_allowed_origins="*")
 
 # This will enable CORS for all routes
 CORS(_app)
@@ -545,12 +545,90 @@ def _get_all_runs() -> Response:
     return jsonify(runs)
 
 
+@_app.route("/api/runs/all/page", methods=["GET"])
+def _get_all_runs_page() -> Response:
+    """Get all runs."""
+    # Update the status of the registered runtimes
+    # Note: this is only for the applications running on the local machine
+    for run in _RunTable.query.filter(
+        _RunTable.status.in_(["running", "waiting"]),
+    ).all():
+        if not _is_process_alive(run.pid, run.timestamp):
+            _RunTable.query.filter_by(run_id=run.run_id).update(
+                {"status": "finished"},
+            )
+            _db.session.commit()
+
+        # 从 web 连接获取
+    runtime_configs_from_register = {
+        _.run_id: {
+            "run_id": _.run_id,
+            "project": _.project,
+            "name": _.name,
+            "timestamp": _.timestamp,
+            "run_dir": _.run_dir,
+            "pid": _.pid,
+            "status": _.status,
+        }
+        for _ in _RunTable.query.all()
+    }
+
+    # 从目录获取
+    runtime_configs_from_dir = _get_all_runs_from_dir()
+
+    # 去除两个来源之间的重复项
+    clean_runtimes = {
+        **runtime_configs_from_dir,
+        **runtime_configs_from_register,
+    }
+
+    # 获取查询参数
+    search = request.args.get("search", default="", type=str)
+    sort_field = request.args.get("sortField", default="timestamp", type=str)
+    sort_order = request.args.get("sortOrder", default="asc", type=str)
+    page = request.args.get("page", default=1, type=int)
+    page_size = request.args.get("pageSize", default=10, type=int)
+
+    # 将运行时数据转换为列表
+    runs = list(clean_runtimes.values())
+
+    # 搜索过滤
+    if search:
+        runs = [
+            run
+            for run in runs
+            if search.lower() in run["name"].lower()
+            or search.lower() in run["project"].lower()
+        ]
+
+    # 排序
+    if sort_field in ["run_id", "project", "name", "timestamp", "status"]:
+        runs.sort(key=itemgetter(sort_field), reverse=(sort_order == "desc"))
+
+    # 分页
+    total_items = len(runs)
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+    paginated_runs = runs[start_index:end_index]
+
+    # 返回 JSON 响应
+    return jsonify(
+        {
+            "data": paginated_runs,
+            "currentPage": page,
+            "pageSize": page_size,
+            "totalItems": total_items,
+        },
+    )
+
+
 @_app.route("/api/invocation", methods=["GET"])
 def _get_invocations() -> Response:
     """Get all API invocations in a run instance."""
     run_dir = request.args.get("run_dir")
+    sort_field = request.args.get("sortField")
+    sort_order = request.args.get("sortOrder", "asc")
     path_invocations = os.path.join(run_dir, _DEFAULT_SUBDIR_INVOKE)
-
     invocations = []
     if os.path.exists(path_invocations):
         for filename in os.listdir(path_invocations):
@@ -560,6 +638,9 @@ def _get_invocations() -> Response:
                 encoding="utf-8",
             ) as file:
                 invocations.append(json.load(file))
+    if sort_field:
+        reverse = sort_order == "desc"
+        invocations.sort(key=lambda x: x.get(sort_field, ""), reverse=reverse)
     return jsonify(invocations)
 
 
@@ -980,7 +1061,7 @@ def init(
         _db.create_all()
 
     if debug:
-        _app.logger.setLevel("DEBUG")
+        _app.logger.setLevel("DEBU G")
     else:
         _app.logger.setLevel("INFO")
 
